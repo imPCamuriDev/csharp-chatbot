@@ -4,11 +4,11 @@ namespace WebAPI.Models;
 
 public record ChatRequest(
     [Required, MinLength(1)] string Message,
-    string? SessionId = null
+    Guid? ConversationId = null
 );
 
 public record ChatResponse(
     string Reply,
-    string SessionId,
+    Guid? ConversationId,
     DateTime Timestamp
 );

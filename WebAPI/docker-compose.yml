@@ -1,0 +1,74 @@
+services:
+
+  postgres:
+    image: postgres:16
+    container_name: chatdb
+    restart: always
+    environment:
+      POSTGRES_USER: chatuser
+      POSTGRES_PASSWORD: suasenha
+      POSTGRES_DB: chatdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chatuser -d chatdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    restart: always
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  ollama:
+    image: ollama/ollama
+    container_name: ollama
+    restart: always
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+  ollama-setup:
+    image: ollama/ollama
+    container_name: ollama-setup
+    depends_on:
+      - ollama
+    entrypoint: >
+      sh -c "sleep 5 && ollama pull llama3.2"
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+    restart: "no"
+
+  webapi:
+    build:
+      context: .
+      dockerfile: WebAPI/Dockerfile
+    container_name: webapi
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__Default=Host=postgres;Database=chatdb;Username=chatuser;Password=suasenha
+      - Ollama__BaseUrl=http://ollama:11434/
+      - Ollama__SystemPrompt=Você é um assistente da empresa Oversee. Responda apenas sobre nossos produtos.
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+volumes:
+   postgres_data:
+   ollama_data:
