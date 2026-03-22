@@ -30,9 +30,7 @@ builder.Services.AddCors(options =>
             .AllowAnyHeader());
 });
 
-builder.Services.AddControllers()
-    .AddJsonOptions(opts =>
-        opts.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower);
+builder.Services.AddControllers();
 
 var app = builder.Build();
 

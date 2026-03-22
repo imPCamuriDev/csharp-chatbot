@@ -25,7 +25,7 @@ public class ChatService : IChatService
         _config = config;
         _db = db;
 
-        _http.BaseAddress = new Uri("http://localhost:11434/");
+        _http.BaseAddress = new Uri(_config["Ollama:BaseUrl"] ?? "http://localhost:11434/");
         _http.DefaultRequestHeaders.Clear();
         _http.DefaultRequestHeaders.Accept
              .Add(new MediaTypeWithQualityHeaderValue("application/json"));
@@ -33,7 +33,6 @@ public class ChatService : IChatService
 
     public async Task<ChatResponse> SendMessageAsync(ChatRequest request, CancellationToken ct)
     {
-        // Busca ou cria a conversa
         Conversation conversation;
 
         if (request.ConversationId.HasValue)
@@ -50,7 +49,6 @@ public class ChatService : IChatService
             await _db.SaveChangesAsync(ct);
         }
 
-        // Salva a mensagem do usuário
         var userMessage = new ChatMessage()
         {
             ConversationId = conversation.Id,
@@ -59,8 +57,7 @@ public class ChatService : IChatService
         };
         _db.ChatMessages.Add(userMessage);
         await _db.SaveChangesAsync(ct);
-
-        // Monta o histórico completo para o Ollama
+        
         var messages = new List<object>
         {
             new { role = "system", content = SystemPrompt }
@@ -69,7 +66,6 @@ public class ChatService : IChatService
         foreach (var msg in conversation.Messages)
             messages.Add(new { role = msg.Role, content = msg.Content });
 
-        // Inclui a mensagem atual
         messages.Add(new { role = "user", content = request.Message });
 
         var payload = new { model = "llama3.2", stream = false, messages };
@@ -88,7 +84,6 @@ public class ChatService : IChatService
         var result = await response.Content.ReadFromJsonAsync<OllamaResponse>(cancellationToken: ct);
         var reply = result?.Message?.Content ?? "Sem resposta";
 
-        // Salva a resposta do assistente
         _db.ChatMessages.Add(new ChatMessage
         {
             ConversationId = conversation.Id,

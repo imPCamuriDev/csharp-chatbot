@@ -64,6 +64,7 @@ services:
       - ConnectionStrings__Default=Host=postgres;Database=chatdb;Username=chatuser;Password=suasenha
       - Ollama__BaseUrl=http://ollama:11434/
       - Ollama__SystemPrompt=Você é um assistente da empresa Oversee. Responda apenas sobre nossos produtos.
+      - ASPNETCORE_URLS=http://+:8080
     depends_on:
       postgres:
         condition: service_healthy
