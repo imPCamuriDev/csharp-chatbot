@@ -54,7 +54,7 @@ services:
   webapi:
     build:
       context: .
-      dockerfile: WebAPI/Dockerfile
+      dockerfile: Dockerfile
     container_name: webapi
     restart: always
     ports:
