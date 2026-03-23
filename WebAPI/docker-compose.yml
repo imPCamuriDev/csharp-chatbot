@@ -17,7 +17,9 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-      
+    networks:
+      - app-network
+
   pgadmin:
     image: dpage/pgadmin4
     container_name: pgadmin
@@ -30,6 +32,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - app-network
 
   ollama:
     image: ollama/ollama
@@ -39,6 +43,8 @@ services:
       - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
+    networks:
+      - app-network
 
   ollama-setup:
     image: ollama/ollama
@@ -50,6 +56,8 @@ services:
     environment:
       - OLLAMA_HOST=http://ollama:11434
     restart: "no"
+    networks:
+      - app-network
 
   webapi:
     build:
@@ -70,6 +78,13 @@ services:
         condition: service_healthy
       ollama:
         condition: service_started
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
 volumes:
-   postgres_data:
-   ollama_data:
+  postgres_data:
+  ollama_data:
